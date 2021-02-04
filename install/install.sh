@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-base_dir=$(dirname "$0")
+work_path=$(dirname $0)
+cd $work_path
+base_dir=$(pwd)
 repo="$base_dir/.."
 env="$base_dir/_build/$1"
 
@@ -15,8 +17,8 @@ if [ $# != 1 ]; then
 fi
 
 # environment variables
-if [ ! $apphome ]; then
-  echo '!> Missing $apphome.' 
+if [ ! $src ] || [ ! $config ] || [ ! $apphome ]; then
+  echo '!> Missing $src.' 
   echo "!> Run 'source $env/env.sh'"
   exit
 fi
@@ -27,45 +29,30 @@ fi
 #  |-- install ($base_dir)
 #         |-- _build
 #         |      |-- $env
-#         |            |-- app: app home
-#         |            |-- data: the data
+#         |            |-- src: customized app home
+#         |            |-- config: customized configuration
 #         |            |-- env.sh
-#         |-- app: app home
-#         |-- data: the data 
-#         |-- docker-imgs: docker images
 #         |-- install.sh
-
-# $apphome: copy from $repo/app + $env/app
-#  |-- $data: copy from $repo/data + $env/data
+#
+# $src: common app home
+#
+# $config: requirement.txt, docker images, and so on
+#
+# $apphome: copy from $src + $env/src
 
 if [[ ! -d $apphome ]]; then
   echo "mkdir -p $apphome"
         mkdir -p $apphome
 fi
 
-if [[ ! -d $apphome/data ]]; then
-  echo "mkdir -p $apphome/data"
-        mkdir -p $apphome/data
-fi
-
 # update latest source code
-echo "cp -a $repo/app/. $apphome/"
-      cp -a $repo/app/. $apphome/
+echo "cp -a $src/. $apphome/"
+      cp -a $src/. $apphome/
 
-if [ -d "$env/app" ]; then
-  echo "cp -a $env/app/. $apphome/"
-        cp -a $env/app/. $apphome/
+if [ -d "$env/src" ]; then
+  echo "cp -a $env/src/. $apphome/"
+        cp -a $env/src/. $apphome/
 fi
-
-### update data folder
-echo "cp -a $repo/data/. $apphome/data/"
-      cp -a $repo/data/. $apphome/data/
-
-if [ -d "$env/data" ]; then
-  echo "cp -a $env/data/. $apphome/data/"
-        cp -a $env/data/. $apphome/data/
-fi
-
 
 ### 2. Create Python3 virtual environment
 if ! [ -d "$apphome/venv" ]; then
@@ -73,8 +60,13 @@ if ! [ -d "$apphome/venv" ]; then
         python3 -m venv $apphome/venv
   echo "source $apphome/venv/bin/activate"
         source $apphome/venv/bin/activate
-  echo "pip install -r $repo/install/docker-imgs/requirements.txt"
-        pip install -r $repo/install/docker-imgs/requirements.txt
+  if [ -f "$env/config/requirements.txt" ]; then
+    echo "pip install -r $env/config/requirements.txt"
+          pip install -r $env/config/requirements.txt
+  elif [ -f "$config/requirements.txt" ]; then
+    echo "pip install -r $config/requirements.txt"
+          pip install -r $config/requirements.txt
+  fi
   echo "deactivate"
         deactivate
 fi
@@ -83,3 +75,5 @@ fi
 echo "-- Run the following script ----"
 echo "cd $apphome/"
 echo "source $apphome/venv/bin/activate"
+echo "export FLASK_APP=flask_app.py"
+echo "flask run"
