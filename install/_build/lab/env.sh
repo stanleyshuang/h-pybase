@@ -17,5 +17,3 @@ export apphome=$srv_home/$project
 echo src = "$src"
 echo config = "$config"
 echo apphome = "$apphome"
-
-
