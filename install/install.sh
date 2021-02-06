@@ -72,8 +72,10 @@ if ! [ -d "$apphome/venv" ]; then
 fi
 
 ### Run script
-echo "-- Run the following script ----"
-echo "cd $apphome/"
-echo "source $apphome/venv/bin/activate"
-echo "export FLASK_APP=flask_app.py"
-echo "flask run"
+if [ -f "$env/config/run.sh" ]; then
+  echo "$env/config/run.sh"
+        $env/config/run.sh
+elif [ -f "$config/run.sh" ]; then
+  echo "$config/run.sh"
+        $config/run.sh
+fi
