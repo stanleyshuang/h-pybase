@@ -10,8 +10,8 @@ srv_home="/Users/$USER/srv"
 project="pybase"
 
 ### Environment variables directed from primary ones
-export src=$base_dir/../../../src
-export config=$base_dir/../../..
+export src=$base_dir/../../src
+export config=$base_dir/../../config
 export apphome=$srv_home/$project
 
 echo src = "$src"

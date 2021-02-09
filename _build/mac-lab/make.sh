@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+
 work_path=$(dirname $0)
 cd $work_path
 base_dir=$(pwd)
-repo="$base_dir/.."
-env="$base_dir/_build/$1"
+
+repo="$base_dir/../.."
+env="$repo/_build/$1"
 
 ### 1. Make the file structure
 ### 2. Create Python3 virtual environment
@@ -12,7 +14,7 @@ env="$base_dir/_build/$1"
 # the configuration
 if [ $# != 1 ]; then
     echo "!> Missing environment information." 
-    echo "!> Usage: $0 <lab | stg | pro>"
+    echo "!> Usage: $0 <mac-lab | heroku>"
     exit
 fi
 
@@ -26,13 +28,12 @@ fi
 ### 1. Make the file structure
 # file structure
 # $repo
-#  |-- install ($base_dir)
-#         |-- _build
-#         |      |-- $env
-#         |            |-- src: customized app home
-#         |            |-- config: customized configuration
-#         |            |-- env.sh
-#         |-- install.sh
+#   |-- _build
+#          |-- $env ($base_dir)
+#                |-- src: customized app home
+#                |-- config: customized configuration
+#                |-- env.sh
+#                |-- make.sh
 #
 # $src: common app home
 #
