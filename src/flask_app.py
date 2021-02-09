@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return f'Hello, world!'
+    return f'Hello, Heroku!'
 
 if __name__ == 'main':
     app.run()
