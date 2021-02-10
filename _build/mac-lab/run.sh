@@ -14,13 +14,26 @@ if ! [ -d "$apphome/venv" ]; then
     echo "pip install -r $env/config/requirements.txt"
           pip install -r $env/config/requirements.txt
   fi
+
+  # Veu environment
+  work_path=$(dirname $0)
+  cd $work_path
+  base_dir=$(pwd)
+
+  echo "cd $apphome"
+        cd $apphome
+  echo "vue create client"
+        vue create client
+
+  # pop up
   echo "deactivate"
         deactivate
+  cd $base_dir
 fi
 
 ### 2. Run app script
 echo "-- Run the following script ----"
 echo "cd $apphome/"
 echo "source $apphome/venv/bin/activate"
-echo "export FLASK_APP=flask_app.py"
-echo "flask run"
+echo "npm run build"
+echo "npm start"

@@ -1,12 +1,36 @@
 #!/usr/bin/env bash
 
-### 1. Update config code
-echo "cp -a $config/. $apphome/"
-      cp -a $config/. $apphome/
+### 0. Initialize .git
+if [ ! -d $apphome/.git ]; then
+  work_path=$(dirname $0)
+  cd $work_path
+  base_dir=$(pwd)
 
-if [ -d "$env/config" ]; then
-  echo "cp -a $env/config/. $apphome/"
-        cp -a $env/config/. $apphome/
+  echo "cd $apphome"
+        cd $apphome
+
+  echo "git init"
+        git init
+
+  echo "heroku git:remote -a $project"
+        heroku git:remote -a $project
+
+  echo "heroku buildpacks:add --index 1 heroku/nodejs"
+        heroku buildpacks:add --index 1 heroku/nodejs
+
+  echo "heroku buildpacks:add --index 2 heroku/python"
+        heroku buildpacks:add --index 2 heroku/python
+
+  # Veu environment
+  echo "vue create client"
+        vue create client
+  # echo "npm run build"
+  #       npm run build
+  # echo "npm start"
+  #       npm start
+
+  # pop up
+  cd $base_dir
 fi
 
 ### 2. Check-in Heroku

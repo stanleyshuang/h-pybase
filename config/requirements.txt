@@ -2,6 +2,7 @@
 gunicorn
 flask
 PyMySQL
+python-dotenv
 ### SQLAlchemy ###
 flask_sqlalchemy
 flask_migrate

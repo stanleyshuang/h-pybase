@@ -66,6 +66,15 @@ if [ -d "$env/src" ]; then
         cp -a $env/src/. $apphome/
 fi
 
+# update latest configuration
+echo "cp -a $config/. $apphome/"
+      cp -a $config/. $apphome/
+
+if [ -d "$env/config" ]; then
+  echo "cp -a $env/config/. $apphome/"
+        cp -a $env/config/. $apphome/
+fi
+
 ### 2. Run script
 if [ -f "$env/run.sh" ]; then
   echo "repo=\"$repo\" env=\"$env\" $env/run.sh  $2"

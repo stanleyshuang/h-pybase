@@ -2,4 +2,4 @@
 
 ### Primary variables
 export srv_home="/Users/$USER/srv"
-export project="pybase"
+export project="h-pybase"
