@@ -24,10 +24,6 @@ if [ ! -d $apphome/.git ]; then
   # Veu environment
   echo "vue create client"
         vue create client
-  # echo "npm run build"
-  #       npm run build
-  # echo "npm start"
-  #       npm start
 
   # pop up
   cd $base_dir
