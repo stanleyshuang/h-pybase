@@ -1,6 +1,7 @@
 ### Heroku ###
 gunicorn
 flask
+Flask-Cors
 PyMySQL
 python-dotenv
 ### SQLAlchemy ###
