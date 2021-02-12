@@ -2,9 +2,10 @@
 gunicorn
 flask
 Flask-Cors
-PyMySQL
 python-dotenv
 ### SQLAlchemy ###
 flask_sqlalchemy
 flask_migrate
 flask_script
+### application ###
+suricataparser

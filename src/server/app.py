@@ -1,10 +1,12 @@
-from flask import Flask 
-from dotenv import load_dotenv
+# -*- coding: utf-8 -*-
+#
+# Auther:   Stanley Huang
+# Project:  h-pybase ver. 1.0
+# Date:     2021/02/12
+#
 import os
-load_dotenv()
 
-# Set up the app and point it to Vue
-app = Flask(__name__, static_folder='../client/dist/',    static_url_path='/')
+from . import app
 
 # Set up the index route
 @app.route('/')
