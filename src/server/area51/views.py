@@ -9,23 +9,44 @@ import json
 from . import area51
 from flask import jsonify
 
-def check_key_unique_value(objs, key, b_detail=False, found_strs = []):
+def check_key_unique_value(objs, key, b_detail=False, ignored_strs = [], counted_strs = []):
+    objnum = len(objs)
+
     extracted = []
     for obj in objs:
         if type(obj[key]) is not list:
             extracted.append(obj[key])
         else:
             extracted.extend(obj[key])
-    if found_strs:
-        for subs in found_strs:
+
+    # count strings that are important
+    keycounts = {}
+    if counted_strs and len(counted_strs) > 0:
+        for subs in counted_strs:
+            for item in extracted:
+                if subs in item:
+                    if subs in keycounts:
+                        keycounts[subs] += 1
+                    else:
+                        keycounts[subs] = 1
+
+    # ignore strings that are not important
+    if ignored_strs and len(ignored_strs) > 0:
+        for subs in ignored_strs:
             extracted = [i for i in extracted if subs not in i]
+
+    # unique strings
     extracted_set = set(extracted)
     extracted_num = len(extracted_set)
 
     output = '{key} number={extracted_num}<br>'.format(key=key, extracted_num=extracted_num)
     if b_detail:
+        for i, (key, value) in enumerate(keycounts.items()):
+            output += '&nbsp;&nbsp;&nbsp;&nbsp;' + key + ' : ' + str(value) + ' : ' + format(value/objnum*100.0, '.2f') + '%<br>'
+        output += '<br>'
         for item in extracted_set:
             output += '&nbsp;&nbsp;&nbsp;&nbsp;' + str(item) + '<br>'
+    output += '<br>'
     return output
 
 
@@ -37,8 +58,10 @@ def dump_objs(objs):
     output += check_key_unique_value(objs, 'classtype', True)
     output += check_key_unique_value(objs, 'msg')
     output += check_key_unique_value(objs, 'header')
-    output += check_key_unique_value(objs, 'metadata', True, ['created_at', 'updated_at'])
-    output += check_key_unique_value(objs, 'options', True, ['sid:', 'metadata:', 'msg:', 'content:', 'reference:'])
+    output += check_key_unique_value(objs, 'metadata', True, ['created_at', 'updated_at', 'former_category', 'deployment', 'signature_severity', 'attack_target', 'affected_product', 'malware_family', 'performance_impact', 'tag', 'cve'], 
+                                                             ['created_at', 'updated_at', 'former_category', 'deployment', 'signature_severity', 'attack_target', 'affected_product', 'malware_family', 'performance_impact', 'tag', 'cve'])
+    output += check_key_unique_value(objs, 'options', True, ['sid:', 'metadata:', 'msg:', 'content:', 'reference:', 'classtype:', 'rev:', 'id:', 'nocase;', 'flow:', 'distance:', 'depth:', 'pcre:', 'within:', 'flowbits:', 'threshold:', 'byte_test:', 'offset:', 'bsize:', 'isdataat:', 'dsize:', 'urilen:', 'fast_pattern:', 'byte_extract:', 'stream_size:', 'asn1:', 'base64_data;', 'base64_decode:', 'byte_jump:', 'detection_filter:', 'dns.query;', 'dns_query;', 'dotprefix;', 'endswith;', 'fast_pattern;', 'file.data;', 'file_data;', 'flags:', 'ftpbounce;', 'icode:', 'itype:', 'ip_proto:', 'noalert;', 'ja3.hash;', 'ja3.string;', 'ja3_hash;', 'ja3s.hash;', 'http.accept;', 'http.accept_enc;', 'http.accept_lang;', 'http.connection;', 'http.content_len;', 'http.content_type;', 'http.cookie;', 'http.header.raw;', 'http.header_names;', 'http.header;', 'http.host.raw;', 'http.host;', 'http.location;', 'http.method;', 'http.protocol;', 'http.server;', 'http.start;', 'http.uri.raw;', 'http.referer;', 'http.request_body;', 'http.request_line;', 'http.response_body;', 'http.response_line;', 'http.stat_code;', 'http.stat_msg;', 'http.uri;', 'http.user_agent;', 'http_header_names;', 'http_uri;', 'http_user_agent;', 'rawbytes;', 'ssh_proto;', 'ssl_state:', 'ssl_version:', 'startswith;', 'tag:', 'tls.cert_issuer;', 'tls.cert_serial;', 'tls.cert_subject;', 'tls.sni;', 'ttl:', 'xbits:'],
+                                                            ['sid:', 'metadata:', 'msg:', 'content:', 'reference:', 'classtype:', 'rev:', 'id:', 'nocase;', 'flow:', 'distance:', 'depth:', 'pcre:', 'within:', 'flowbits:', 'threshold:', 'byte_test:', 'offset:', 'bsize:', 'isdataat:', 'dsize:', 'urilen:', 'fast_pattern:', 'byte_extract:', 'stream_size:', 'asn1:', 'base64_data;', 'base64_decode:', 'byte_jump:', 'detection_filter:', 'dns.query;', 'dns_query;', 'dotprefix;', 'endswith;', 'fast_pattern;', 'file.data;', 'file_data;', 'flags:', 'ftpbounce;', 'icode:', 'itype:', 'ip_proto:', 'noalert;', 'ja3.hash;', 'ja3.string;', 'ja3_hash;', 'ja3s.hash;', 'http.accept;', 'http.accept_enc;', 'http.accept_lang;', 'http.connection;', 'http.content_len;', 'http.content_type;', 'http.cookie;', 'http.header.raw;', 'http.header_names;', 'http.header;', 'http.host.raw;', 'http.host;', 'http.location;', 'http.method;', 'http.protocol;', 'http.server;', 'http.start;', 'http.uri.raw;', 'http.referer;', 'http.request_body;', 'http.request_line;', 'http.response_body;', 'http.response_line;', 'http.stat_code;', 'http.stat_msg;', 'http.uri;', 'http.user_agent;', 'http_header_names;', 'http_uri;', 'http_user_agent;', 'rawbytes;', 'ssh_proto;', 'ssl_state:', 'ssl_version:', 'startswith;', 'tag:', 'tls.cert_issuer;', 'tls.cert_serial;', 'tls.cert_subject;', 'tls.sni;', 'ttl:', 'xbits:'])
     for obj in objs:
         # output += json.dumps(obj) + '<br>'
         output += 'header: ' + obj['header'] + '<br>'
@@ -58,7 +81,7 @@ def dump_list(the_list):
     output += ']<br>'
     return output
 
-def construct_list(the_list):
+def parse_list(the_list):
     value = []
     for item in the_list:
         value.append(str(item))
@@ -86,8 +109,8 @@ def parse_rule(rule_file):
                 obj['classtype'] = rule.classtype
                 obj['msg'] = rule.msg
                 obj['header'] = rule.header
-                obj['metadata'] = construct_list(rule.metadata)
-                obj['options'] = construct_list(rule.options)
+                obj['metadata'] = parse_list(rule.metadata)
+                obj['options'] = parse_list(rule.options)
                 objs.append(obj)
     return objs
 
