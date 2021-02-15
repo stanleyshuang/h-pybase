@@ -37,7 +37,7 @@ def show_analyzed_unique_value(rules, key, b_detail=False, known_subkeys = [], i
             if type(item) is str:
                 idx = item.find(subkey)
                 if idx > -1:
-                    the_value = item[idx+len(subkey)+1:]
+                    the_value = item[idx+len(subkey):]
                 else:
                     the_value = item
             else:
