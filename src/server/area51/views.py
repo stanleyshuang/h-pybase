@@ -9,97 +9,103 @@ import json
 from . import area51
 from flask import jsonify
 
-def analyze_key_unique_value(objs, key, b_detail=False, ignored_strs = [], counted_strs = []):
-    objnum = len(objs)
+def find_str_in_list(the_str, the_list):
+    for subs in the_list:
+        if subs in the_str:
+            return subs
+    return None
 
-    extracted = []
-    for obj in objs:
-        if type(obj[key]) is not list:
-            extracted.append(obj[key])
+def show_analyzed_unique_value(rules, key, b_detail=False, known_subkeys = [], ignored_strs = []):
+    rulenum = len(rules)
+
+    # extract values into extracted_vals and extracted_vals_set
+    extracted_vals = []
+    for rule in rules:
+        if type(rule[key]) is not list:
+            extracted_vals.append(rule[key])
         else:
-            extracted.extend(obj[key])
+            extracted_vals.extend(rule[key])
+    extracted_vals_set = set(extracted_vals)
 
-    extracted_set = set(extracted)
-
-    # count keys that are important
-    keycounts = {}
-    for subs in counted_strs:
-        for item in extracted:
-            if subs in item:
-                if subs in keycounts:
-                    keycounts[subs][0] += 1
-                    idx = item.find(':')
-                    if idx > -1:
-                        # insert item[idx+1:] into keycounts[subs][1]
-                        if str(item[idx+1:]) in keycounts[subs][1]:
-                            keycounts[subs][1][str(item[idx+1:])] += 1
-                        else:
-                            keycounts[subs][1][str(item[idx+1:])] = 1
-                    else:
-                        # insert item into keycounts[subs][1]
-                        if str(item) in keycounts[subs][1]:
-                            keycounts[subs][1][str(item)] += 1
-                        else:
-                            keycounts[subs][1][str(item)] = 1
+    # unique_subkeys { counts, { value, counts} }
+    unique_subkeys = {}
+    unknown_subkeys = {}
+    for item in extracted_vals:
+        subkey = find_str_in_list(item, known_subkeys)
+        if subkey:
+            # known subkey
+            if type(item) is str:
+                idx = item.find(subkey)
+                if idx > -1:
+                    the_value = item[idx+len(subkey)+1:]
                 else:
-                    init_dict = {}
-                    idx = item.find(':')
-                    if idx > -1:
-                        init_dict[str(item[idx+1:])] = 1
-                    else:
-                        init_dict[str(item)] = 1
-                    keycounts[subs] = [1, init_dict]
+                    the_value = item
+            else:
+                the_value = str(item)
+        else:
+            # unknown subkey
+            if type(item) is str:
+                the_value = item
+            else:
+                the_value = str(item)
 
-    output = '{key} number={extracted_num}<br>'.format(key=key, extracted_num=len(extracted_set))
+        if subkey:
+            if subkey in unique_subkeys:
+                unique_subkeys[subkey][0] += 1
+                if the_value in unique_subkeys[subkey][1]:
+                    unique_subkeys[subkey][1][the_value] += 1
+                else:
+                    unique_subkeys[subkey][1][the_value] = 1
+            else:
+                unique_subkeys[subkey] = [1, {the_value:1}]
+        else:
+            if the_value in unknown_subkeys:
+                unknown_subkeys[the_value] += 1
+            else:
+                unknown_subkeys[the_value] = 1
+
+    output = '{key} number={extracted_vals_num}<br>'.format(key=key, extracted_vals_num=len(extracted_vals_set))
     if b_detail:
-        for key in sorted(keycounts.keys()):
-            output += '&nbsp;&nbsp;&nbsp;&nbsp;' + str(key) + ' | ' + str(keycounts[key][0]) + ' | ' + format(keycounts[key][0]/objnum*100.0, '.1f') + '% | ' + str(len(keycounts[key][1])) + '<br>'
+        for key in sorted(unique_subkeys.keys()):
+            output += '&nbsp;&nbsp;&nbsp;&nbsp;' + str(key) + ' | ' + str(unique_subkeys[key][0]) + ' | ' + format(unique_subkeys[key][0]/rulenum*100.0, '.1f') + '% | ' + str(len(unique_subkeys[key][1])) + '<br>'
             if not (key in ignored_strs):
-                for value in sorted(keycounts[key][1].keys()):
-                    output += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + str(value) + ' | ' + str(keycounts[key][1][value]) + ' | ' + format(keycounts[key][1][value]/objnum*100.0, '.1f') + '%<br>'
+                for value in sorted(unique_subkeys[key][1].keys()):
+                    output += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + str(value) + ' | ' + str(unique_subkeys[key][1][value]) + ' | ' + format(unique_subkeys[key][1][value]/rulenum*100.0, '.1f') + '%<br>'
+        if len(unknown_subkeys.keys()) > 0:
+            output += '&nbsp;&nbsp;&nbsp;&nbsp;unknown subkeys | ' + str(len(unknown_subkeys.keys())) + '<br>'
+            for item in sorted(unknown_subkeys.keys()):
+                output += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + str(item) + ' | ' + str(unknown_subkeys[item]) + ' | ' + format(unknown_subkeys[item]/rulenum*100.0, '.1f') + '%<br>'
         output += '<br>'
     return output
 
 
-def dump_objs(objs):
-    output = analyze_key_unique_value(objs, 'sid')
-    output += analyze_key_unique_value(objs, 'gid')
-    output += analyze_key_unique_value(objs, 'rev')
-    output += analyze_key_unique_value(objs, 'action')
-    output += analyze_key_unique_value(objs, 'classtype')
-    output += analyze_key_unique_value(objs, 'msg')
-    output += analyze_key_unique_value(objs, 'header')
-    output += analyze_key_unique_value(objs, 'metadata', True, ['created_at', 'updated_at', 'former_category'], 
-                                                             ['created_at', 'updated_at', 'former_category', 'deployment', 'signature_severity', 'attack_target', 'affected_product', 'malware_family', 'performance_impact', 'tag', 'cve'])
-    output += analyze_key_unique_value(objs, 'options', True, ['sid:', 'metadata:', 'msg:', 'content:', 'reference:', 'rev:', 'id:', 'nocase;', ],
-                                                            ['sid:', 'metadata:', 'msg:', 'content:', 'reference:', 'rev:', 'id:', 'nocase;', 'classtype:', 'flow:', 'distance:', 'depth:', 'pcre:', 'within:', 'flowbits:', 'threshold:', 'byte_test:', 'offset:', 'bsize:', 'isdataat:', 'dsize:', 'urilen:', 'fast_pattern:', 'byte_extract:', 'stream_size:', 'asn1:', 'base64_data;', 'base64_decode:', 'byte_jump:', 'detection_filter:', 'dns.query;', 'dns_query;', 'dotprefix;', 'endswith;', 'fast_pattern;', 'file.data;', 'file_data;', 'flags:', 'ftpbounce;', 'icode:', 'itype:', 'ip_proto:', 'noalert;', 'ja3.hash;', 'ja3.string;', 'ja3_hash;', 'ja3s.hash;', 'http.accept;', 'http.accept_enc;', 'http.accept_lang;', 'http.connection;', 'http.content_len;', 'http.content_type;', 'http.cookie;', 'http.header.raw;', 'http.header_names;', 'http.header;', 'http.host.raw;', 'http.host;', 'http.location;', 'http.method;', 'http.protocol;', 'http.server;', 'http.start;', 'http.uri.raw;', 'http.referer;', 'http.request_body;', 'http.request_line;', 'http.response_body;', 'http.response_line;', 'http.stat_code;', 'http.stat_msg;', 'http.uri;', 'http.user_agent;', 'http_header_names;', 'http_uri;', 'http_user_agent;', 'rawbytes;', 'ssh_proto;', 'ssl_state:', 'ssl_version:', 'startswith;', 'tag:', 'tls.cert_issuer;', 'tls.cert_serial;', 'tls.cert_subject;', 'tls.sni;', 'ttl:', 'xbits:'])
+def show_analyzed_rules(rules):
+    output = show_analyzed_unique_value(rules, 'sid')
+    output += show_analyzed_unique_value(rules, 'gid')
+    output += show_analyzed_unique_value(rules, 'rev')
+    output += show_analyzed_unique_value(rules, 'action')
+    output += show_analyzed_unique_value(rules, 'classtype')
+    output += show_analyzed_unique_value(rules, 'msg')
+    output += show_analyzed_unique_value(rules, 'header')
+    output += show_analyzed_unique_value(rules, 'metadata', True, ['created_at', 'updated_at', 'former_category', 'deployment', 'signature_severity', 'attack_target', 'affected_product', 'malware_family', 'performance_impact', 'tag', 'cve'],
+                                                                  ['created_at', 'updated_at', 'former_category'])
+    output += show_analyzed_unique_value(rules, 'options', True, ['sid:', 'metadata:', 'msg:', 'content:', 'reference:', 'rev:', 'id:', 'nocase;', 'pcre:', 'classtype:', 'flow:', 'distance:', 'depth:', 'within:', 'flowbits:', 'threshold:', 'byte_test:', 'offset:', 'bsize:', 'isdataat:', 'dsize:', 'urilen:', 'fast_pattern:', 'byte_extract:', 'stream_size:', 'asn1:', 'byte_jump:', 'detection_filter:', 'dns.query;', 'dns_query;', 'dotprefix;', 'endswith;', 'fast_pattern;', 'file.data;', 'file_data;', 'flags:', 'ftpbounce;', 'icode:', 'itype:', 'ip_proto:', 'noalert;', 'ja3.hash;', 'ja3.string;', 'ja3_hash;', 'ja3s.hash;', 'http.accept;', 'http.accept_enc;', 'http.accept_lang;', 'http.connection;', 'http.content_len;', 'http.content_type;', 'http.cookie;', 'http.header.raw;', 'http.header_names;', 'http.header;', 'http.host.raw;', 'http.host;', 'http.location;', 'http.method;', 'http.protocol;', 'http.server;', 'http.start;', 'http.uri.raw;', 'http.referer;', 'http.request_body;', 'http.request_line;', 'http.response_body;', 'http.response_line;', 'http.stat_code;', 'http.stat_msg;', 'http.uri;', 'http.user_agent;', 'http_header_names;', 'http_uri;', 'http_user_agent;', 'rawbytes;', 'ssh_proto;', 'ssl_state:', 'ssl_version:', 'startswith;', 'tag:', 'tls.cert_issuer;', 'tls.cert_serial;', 'tls.cert_subject;', 'tls.sni;', 'ttl:', 'xbits:'],
+                                                                 ['sid:', 'metadata:', 'msg:', 'content:', 'reference:', 'rev:', 'id:', 'nocase;', 'pcre:'])
     return output
 
-def dump_list(the_list):
-    b_first = True
-    output = '[<br>'
-    for item in the_list:
-        if not b_first:
-            output += '<br>'
-        else:
-            b_first = False 
-        output += '&nbsp;&nbsp;&nbsp;&nbsp;' + item
-    output += ']<br>'
-    return output
-
-def parse_list(the_list):
+def analyze_list(the_list):
     value = []
     for item in the_list:
         value.append(str(item))
     return value
 
-def parse_rule(rule_file):
+def analyze_ruleset(rule_file):
     from server.util.util_text_file import get_lines
     from suricataparser import parse_rule, parse_file
     s_ruleset_path = '/Users/huangstan/srv/data/' + 'rules/'
 
     ### read file in all_lines
-    objs = []
+    the_rules = []
     all_lines = get_lines(s_ruleset_path + rule_file)
     ### process all lines
     for line in all_lines:
@@ -107,18 +113,18 @@ def parse_rule(rule_file):
         rule = parse_rule(line)
         if rule:
             if rule.enabled == True:
-                obj = {}
-                obj['sid'] = rule.sid
-                obj['gid'] = rule._gid
-                obj['rev'] = rule.rev
-                obj['action'] = rule.action
-                obj['classtype'] = rule.classtype
-                obj['msg'] = rule.msg
-                obj['header'] = rule.header
-                obj['metadata'] = parse_list(rule.metadata)
-                obj['options'] = parse_list(rule.options)
-                objs.append(obj)
-    return objs
+                the_rule = {}
+                the_rule['sid'] = rule.sid
+                the_rule['gid'] = rule._gid
+                the_rule['rev'] = rule.rev
+                the_rule['action'] = rule.action
+                the_rule['classtype'] = rule.classtype
+                the_rule['msg'] = rule.msg
+                the_rule['header'] = rule.header
+                the_rule['metadata'] = analyze_list(rule.metadata)
+                the_rule['options'] = analyze_list(rule.options)
+                the_rules.append(the_rule)
+    return the_rules
 
 @area51.after_app_request
 def after_request(response):
@@ -132,8 +138,8 @@ def ping_pong():
 # suricata ruleset parser
 @area51.route('/suricata-ruleset/<string:rule_file>', methods=['GET'])
 def suricata_rule(rule_file):
-    objs = parse_rule(rule_file)
-    return dump_objs(objs)
+    rules = analyze_ruleset(rule_file)
+    return show_analyzed_rules(rules)
 
 # suricata ruleset parser
 @area51.route('/suricata-rulesets', methods=['GET'])
@@ -145,8 +151,8 @@ def suricata_rulesets():
     rule_files = get_name_list_of_files(s_ruleset_path)
 
     ### read file in all_lines
-    objs = []
+    rules = []
     for rule_file in rule_files:
-        objs.extend(parse_rule(rule_file))
-    return dump_objs(objs)
+        rules.extend(analyze_ruleset(rule_file))
+    return show_analyzed_rules(rules)
     
