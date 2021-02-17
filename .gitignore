@@ -131,5 +131,5 @@ dmypy.json
 ### Customized
 # macOS
 .DS_Store
-client/dist
-client/node_modules
+src/client/dist
+src/client/node_modules
