@@ -31,7 +31,15 @@ fi
 
 ### 2. Check-in Heroku
 echo "-- Run the following script ----"
-echo "cd $apphome/"
+# Veu environment
+if ! [ -d "$apphome/client" ]; then
+  echo "cd $apphome"
+  echo "vue create client"
+else
+  echo "cd $apphome/client"
+  echo "npm install"
+fi
+echo "cd $apphome"
 echo "git add ."
 echo "git commit -m \"$1\""
 echo "git push heroku master"
