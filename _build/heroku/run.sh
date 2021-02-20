@@ -12,6 +12,9 @@ if [ ! -d $apphome/.git ]; then
   echo "git init"
         git init
 
+  echo "heroku create $project"
+        heroku create $project
+
   echo "heroku git:remote -a $project"
         heroku git:remote -a $project
 
