@@ -23,6 +23,8 @@ env="$repo/_build/$1"
 export src=$repo/src
 export config=$repo/config
 export apphome=$srv_home/$project
+export appstatic=$srv_home/$project/static
+export appdownloads=$srv_home/$project/downloads
 
 if [ ! $src ] || [ ! $config ] || [ ! $apphome ]; then
   echo '!> Missing $src.' 
@@ -47,10 +49,13 @@ echo apphome = "$apphome"
 #          |-- make.sh
 #
 # $src: common app home
+# $static: external static data
 #
 # $config: requirement.txt, docker images, and so on
 #
 # $apphome: copy from $src + $env/src
+# $appstatic: copy from $static
+# $appdownloads: copy from $static
 
 if [ ! -d $apphome ]; then
   echo "mkdir -p $apphome"
@@ -74,6 +79,22 @@ if [ -d "$env/config" ]; then
   echo "cp -a $env/config/. $apphome/"
         cp -a $env/config/. $apphome/
 fi
+
+# copy external static data
+if [ -d "$static" ]; then
+  if [ ! -d $appstatic ]; then
+    echo "mkdir -p $appstatic"
+          mkdir -p $appstatic
+  fi
+  echo "cp -a $static/. $appstatic/"
+        cp -a $static/. $appstatic/
+fi
+
+if [ ! -d $appdownloads ]; then
+  echo "mkdir -p $appdownloads"
+        mkdir -p $appdownloads
+fi
+
 
 ### 2. Run script
 if [ -f "$env/run.sh" ]; then
