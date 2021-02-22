@@ -10,7 +10,7 @@ from . import area51
 from flask import jsonify
 
 from server.util.util_file import get_name_list_of_files
-from server.util.util_suricata_rulesets import parse_ruleset, show_rules_value_analysis, output_risk_tsv
+from server.util.util_suricata_rulesets import parse_a_rule, parse_ruleset, show_rules_value_analysis, output_risk_tsv
 from server.util.util_text_file import get_lines, write_lines
 
 s_static_data_path = './static/'
@@ -61,4 +61,20 @@ def suricata_rulesets_tsv():
     output = ''
     for line in tsv_lines:
         output += line + '<br>'
+    return output
+
+# suricata ruleset parser
+@area51.route('/suricata-ruleset-rule-review/<int:sid>', methods=['GET'])
+def suricata_ruleset_rule_review(sid):
+    ### get file list
+    rule_files = get_name_list_of_files(s_ruleset_path)
+    ### read file in all_lines
+    output = ''
+    for rule_file in rule_files:
+        all_lines = get_lines(s_ruleset_path + rule_file)
+        for line in all_lines:
+            a_rule = parse_a_rule(line)
+            if a_rule and type(a_rule['sid']) is int and a_rule['sid'] == sid:
+                output += line + '<br>\n'
+                write_lines(s_output_data_path + 'etopen_sid_{sid}.txt'.format(sid=str(sid)), line)
     return output

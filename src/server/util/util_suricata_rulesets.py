@@ -96,24 +96,29 @@ def parse_list_value(the_list):
         value.append(str(item))
     return value
 
+def parse_a_rule(line):
+    rule = parse_rule(line)
+    if rule:
+        if rule.enabled == True:
+            the_rule = {}
+            the_rule['sid'] = rule.sid
+            the_rule['gid'] = rule._gid
+            the_rule['rev'] = rule.rev
+            the_rule['action'] = rule.action
+            the_rule['classtype'] = rule.classtype
+            the_rule['msg'] = rule.msg
+            the_rule['header'] = rule.header
+            the_rule['metadata'] = parse_list_value(rule.metadata)
+            the_rule['options'] = parse_list_value(rule.options)
+            return the_rule
+    return None
+
 def parse_ruleset(all_lines):
     the_rules = []
     for line in all_lines:
-        # if line[0] != '#':
-        rule = parse_rule(line)
-        if rule:
-            if rule.enabled == True:
-                the_rule = {}
-                the_rule['sid'] = rule.sid
-                the_rule['gid'] = rule._gid
-                the_rule['rev'] = rule.rev
-                the_rule['action'] = rule.action
-                the_rule['classtype'] = rule.classtype
-                the_rule['msg'] = rule.msg
-                the_rule['header'] = rule.header
-                the_rule['metadata'] = parse_list_value(rule.metadata)
-                the_rule['options'] = parse_list_value(rule.options)
-                the_rules.append(the_rule)
+        a_rule = parse_a_rule(line)
+        if a_rule:
+            the_rules.append(a_rule)
     return the_rules
 
 def output_risk_tsv(rules):
