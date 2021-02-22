@@ -122,7 +122,8 @@ def parse_ruleset(all_lines):
     return the_rules
 
 def output_risk_tsv(rules):
-    s_low_risk_sids = [2024897]
+    s_low_risk_sids = [] # [2024897]
+    s_low_risk_classtype = ['misc-activity']
     s_high_risk_classtype = [
                             'attempted-user',
                             'unsuccessful-user',
@@ -148,13 +149,18 @@ def output_risk_tsv(rules):
         if rule['sid'] in s_low_risk_sids:
             score = 20
         else:
-            indices = [i for i, value in enumerate(rule['metadata']) if 'signature_severity' in value]
-            for i in indices:
-                if 'Critical' in rule['metadata'][i]:
-                    score += 40
-                elif 'Major' in rule['metadata'][i]:
-                    score += 20
-            if 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
-                score += 20
+            if 'classtype' in rule and rule['classtype'] in s_low_risk_classtype:
+                score = 20
+            elif 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
+                score = 40
+                indices = [i for i, value in enumerate(rule['metadata']) if 'signature_severity' in value]
+                for i in indices:
+                    if 'Critical' in rule['metadata'][i]:
+                        score += 40
+                    elif 'Major' in rule['metadata'][i]:
+                        score += 20
+                indices = [i for i, value in enumerate(rule['options']) if 'malware_family' in value]
+                for i in indices:
+                    score += 1
         lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
     return lines
