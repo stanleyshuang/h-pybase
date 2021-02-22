@@ -121,7 +121,23 @@ def parse_ruleset(all_lines):
             the_rules.append(a_rule)
     return the_rules
 
-def output_risk_tsv(rules):
+def output_value_of_subkey(rule_data, subkey):
+    indices = [i for i, value in enumerate(rule_data) if subkey in value]
+    if len(indices) > 0:
+        output_value = ''
+        for i, idx in enumerate(indices):
+            if i > 0:
+                output_value += ', '
+            output_value += rule_data[idx] 
+    else:
+        output_value = 'n/a'
+    return output_value, indices
+
+def output_count_of_subkey(rule_data, subkey):
+    indices = [i for i, value in enumerate(rule_data) if subkey in value]
+    return len(indices)
+
+def output_risk_tsv(rules, debug='False'):
     s_low_risk_sids = [] # [2024897]
     s_low_risk_classtype = ['misc-activity']
     s_high_risk_classtype = [
@@ -142,9 +158,18 @@ def output_risk_tsv(rules):
                             'command-and-control']
     rulenum = len(rules)
 
-    lines = ['sid\tscore\tmsg\n']
+    if debug == 'True':
+        lines = ['sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference\n']
+    else:
+        lines = ['sid\tscore\tmsg\n']
     # extract values into extracted_vals and extracted_vals_set
     for rule in rules:
+        signature_severity, signature_severity_indices = output_value_of_subkey(rule['metadata'], 'signature_severity')
+        malware_family, malware_family_indices = output_value_of_subkey(rule['metadata'], 'malware_family')
+        former_category, former_category_indices = output_value_of_subkey(rule['metadata'], 'former_category')
+        content_count = output_count_of_subkey(rule['options'], 'content')
+        reference, reference_indices = output_value_of_subkey(rule['options'], 'reference')
+
         score = 20
         if rule['sid'] in s_low_risk_sids:
             score = 20
@@ -153,14 +178,28 @@ def output_risk_tsv(rules):
                 score = 20
             elif 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
                 score = 40
-                indices = [i for i, value in enumerate(rule['metadata']) if 'signature_severity' in value]
-                for i in indices:
+                for i in signature_severity_indices:
                     if 'Critical' in rule['metadata'][i]:
                         score += 40
                     elif 'Major' in rule['metadata'][i]:
                         score += 20
-                indices = [i for i, value in enumerate(rule['options']) if 'malware_family' in value]
-                for i in indices:
+                for i in malware_family_indices:
                     score += 1
-        lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
+                for i in reference_indices:
+                    score += 1
+                if score >= 100:
+                    score = 99
+            else:
+                score = 20
+        if debug == 'True':
+            lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule else 'n/a') +
+                        '\t' + rule['classtype'] +
+                        '\t' + signature_severity +
+                        '\t' + malware_family + 
+                        '\t' + former_category +
+                        '\t' + str(content_count) + 
+                        '\t' + reference +
+                        '\n')
+        else:
+            lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
     return lines
