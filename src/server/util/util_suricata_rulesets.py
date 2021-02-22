@@ -117,10 +117,35 @@ def parse_ruleset(all_lines):
     return the_rules
 
 def output_risk_csv(rules):
+    s_high_risk_classtype = [
+                            'attempted-user',
+                            'unsuccessful-user',
+                            'successful-user',
+                            'attempted-admin',
+                            'successful-admin',
+                            'shellcode-detect',
+                            'trojan-activity',
+                            'web-application-attack',
+                            'kickass-porn',
+                            'policy-violation',
+                            'targeted-activity',
+                            'exploit-kit',
+                            'domain-c2',
+                            'credential-theft',
+                            'command-and-control']
     rulenum = len(rules)
 
-    output = 'sid, msg<br>\n'
+    lines = ['sid\tscore\tmsg\n']
     # extract values into extracted_vals and extracted_vals_set
     for rule in rules:
-        output += str(rule['sid']) + ', ' + (rule['msg'] if rule['msg'] else 'n/a') + '<br>\n'
-    return output
+        score = 20
+        indices = [i for i, value in enumerate(rule['metadata']) if 'signature_severity' in value]
+        for i in indices:
+            if 'Critical' in rule['metadata'][i]:
+                score += 40
+            elif 'Major' in rule['metadata'][i]:
+                score += 20
+        if 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
+            score += 20
+        lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
+    return lines

@@ -8,6 +8,14 @@
 
 def get_lines(filename):
     with open(filename, 'r') as fp:
-         all_lines = fp.readlines()
-         return all_lines
+        all_lines = fp.readlines()
+        return all_lines
     return None
+
+def write_lines(filename, all_lines):
+    with open(filename, 'w') as fp:
+    	fp.writelines(all_lines)
+
+def write_output(filename, output):
+    with open(filename, 'w') as fp:
+    	fp.writeline(output)

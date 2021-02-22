@@ -93,6 +93,8 @@ fi
 if [ ! -d $appdownloads ]; then
   echo "mkdir -p $appdownloads"
         mkdir -p $appdownloads
+  echo "chmod 777 $appdownloads"
+        chmod 777 $appdownloads
 fi
 
 

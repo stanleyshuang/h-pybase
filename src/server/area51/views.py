@@ -11,9 +11,10 @@ from flask import jsonify
 
 from server.util.util_file import get_name_list_of_files
 from server.util.util_suricata_rulesets import parse_ruleset, show_rules_value_analysis, output_risk_csv
-from server.util.util_text_file import get_lines
+from server.util.util_text_file import get_lines, write_lines
 
-s_static_data_path = '../static/'
+s_static_data_path = './static/'
+s_output_data_path = './downloads/'
 s_ruleset_path = s_static_data_path + 'rules/'
 
 
@@ -55,4 +56,9 @@ def suricata_rulesets_csv():
     for rule_file in rule_files:
         all_lines = get_lines(s_ruleset_path + rule_file)
         rules.extend(parse_ruleset(all_lines))
-    return output_risk_csv(rules)
+    csv_lines = output_risk_csv(rules)
+    write_lines(s_output_data_path + 'suricata_rulesets_risk.csv', csv_lines)
+    output = ''
+    for line in csv_lines:
+        output += line + '<br>'
+    return output
