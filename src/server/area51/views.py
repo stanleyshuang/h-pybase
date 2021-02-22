@@ -10,7 +10,7 @@ from . import area51
 from flask import jsonify
 
 from server.util.util_file import get_name_list_of_files
-from server.util.util_suricata_rulesets import parse_ruleset, show_rules_value_analysis, output_risk_csv
+from server.util.util_suricata_rulesets import parse_ruleset, show_rules_value_analysis, output_risk_tsv
 from server.util.util_text_file import get_lines, write_lines
 
 s_static_data_path = './static/'
@@ -47,8 +47,8 @@ def suricata_rulesets_analyze_value():
     return show_rules_value_analysis(rules)
 
 # suricata ruleset parser
-@area51.route('/suricata-rulesets-csv', methods=['GET'])
-def suricata_rulesets_csv():
+@area51.route('/suricata-rulesets-tsv', methods=['GET'])
+def suricata_rulesets_tsv():
     ### get file list
     rule_files = get_name_list_of_files(s_ruleset_path)
     ### read file in all_lines
@@ -56,9 +56,9 @@ def suricata_rulesets_csv():
     for rule_file in rule_files:
         all_lines = get_lines(s_ruleset_path + rule_file)
         rules.extend(parse_ruleset(all_lines))
-    csv_lines = output_risk_csv(rules)
-    write_lines(s_output_data_path + 'suricata_rulesets_risk.csv', csv_lines)
+    tsv_lines = output_risk_tsv(rules)
+    write_lines(s_output_data_path + 'suricata_rulesets_risk.tsv', tsv_lines)
     output = ''
-    for line in csv_lines:
+    for line in tsv_lines:
         output += line + '<br>'
     return output

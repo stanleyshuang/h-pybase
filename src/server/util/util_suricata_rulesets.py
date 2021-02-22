@@ -116,7 +116,7 @@ def parse_ruleset(all_lines):
                 the_rules.append(the_rule)
     return the_rules
 
-def output_risk_csv(rules):
+def output_risk_tsv(rules):
     s_high_risk_classtype = [
                             'attempted-user',
                             'unsuccessful-user',
