@@ -138,6 +138,11 @@ def output_count_of_subkey(rule_data, subkey):
     return len(indices)
 
 def output_risk_tsv(rules, debug='False'):
+    from datetime import datetime
+    now = datetime.now()
+    dt_string = now.strftime("%Y%m%d-%H%M%S")
+    lines = ['# build:' + dt_string + '\n']
+
     s_low_risk_sids = [] # [2024897]
     s_low_risk_classtype = ['misc-activity']
     s_high_risk_classtype = [
@@ -159,9 +164,9 @@ def output_risk_tsv(rules, debug='False'):
     rulenum = len(rules)
 
     if debug == 'True':
-        lines = ['sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference\n']
+        lines.append('sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference\n')
     else:
-        lines = ['sid\tscore\tmsg\n']
+        lines.append('sid\tscore\tmsg\n')
     # extract values into extracted_vals and extracted_vals_set
     for rule in rules:
         signature_severity, signature_severity_indices = output_value_of_subkey(rule['metadata'], 'signature_severity')
