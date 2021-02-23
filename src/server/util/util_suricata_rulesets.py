@@ -143,24 +143,76 @@ def output_risk_tsv(rules, debug='False'):
     dt_string = now.strftime("%Y%m%d-%H%M%S")
     lines = ['# build:' + dt_string + '\n']
 
-    s_low_risk_sids = [] # [2024897]
-    s_low_risk_classtype = ['misc-activity']
-    s_high_risk_classtype = [
-                            'attempted-user',
-                            'unsuccessful-user',
-                            'successful-user',
-                            'attempted-admin',
-                            'successful-admin',
-                            'shellcode-detect',
-                            'trojan-activity',
-                            'web-application-attack',
-                            'kickass-porn',
-                            'policy-violation',
-                            'targeted-activity',
-                            'exploit-kit',
-                            'domain-c2',
-                            'credential-theft',
-                            'command-and-control']
+    # 2021-02-22    80都是malware, exploit 跟shellcode
+    #               classtype:misc-activity 也是扣10吧
+    #               classtype:trojan-activity 這比較可信
+    #               signature_severity Major ,但 classtype:misc-activity 是misc-activity 應該就是20
+    #               但若是trojan-activity 是40分, 但有malware_family 你就可以加分,且malware_family ,若有reference應該可信度又更高
+    #               基本former_category USER_AGEAGT 去判斷很容易務斷,雖然很多bot 會用自己的，但行為不一定都是有問題
+    s_labelled_sids = {    
+                    2024897: 20, # 
+                    2102496: 60, # 2021-02-23    20分裡,有些有CVE 且有MS的patch的, 分數應該要60比較好, reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
+                    2102491: 60, #               reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
+                    2102385: 60, #               reference:cve,2003-0818;
+                    2027189: 40  #               這個20分就不太合理說
+
+    }
+
+    s_high_risk_classtype = {
+                    'attempted-user': 'Attempted User Privilege Gain',
+                    'unsuccessful-user': 'Unsuccessful User Privilege Gain',
+                    'successful-user': 'Successful User Privilege Gain',
+                    'attempted-admin': 'Attempted Administrator Privilege Gain',
+                    'successful-admin': 'Successful Administrator Privilege Gain',
+                    'shellcode-detect': 'Executable code was detected',
+                    'trojan-activity': 'A Network Trojan was detected',
+                    'web-application-attack': 'Web Application Attack',
+                    'kickass-porn': 'SCORE! Get the lotion!',
+                    'policy-violation': 'Potential Corporate Privacy Violation',
+                    'targeted-activity': 'Targeted Malicious Activity was Detected',
+                    'exploit-kit': 'Exploit Kit Activity Detected',
+                    'domain-c2': 'Domain Observed Used for C2 Detected',
+                    'credential-theft': 'Successful Credential Theft Detected',
+                    'command-and-control': 'Malware Command and Control Activity Detected'
+    }
+
+    s_mid_risk_classtype = {
+                    'bad-unknown': 'Potentially Bad Traffic',
+                    'attempted-recon': 'Attempted Information Leak',
+                    'successful-recon-limited': 'Information Leak',
+                    'successful-recon-largescale': 'Large Scale Information Leak',
+                    'attempted-dos': 'Attempted Denial of Service',
+                    'successful-dos': 'Denial of Service',
+                    'rpc-portmap-decode': 'Decode of an RPC Query',
+                    'suspicious-filename-detect': 'A suspicious filename was detected',
+                    'suspicious-login': 'An attempted login using a suspicious username was detected',
+                    'system-call-detect': 'A system call was detected',
+                    'unusual-client-port-connection': 'A client was using an unusual port',
+                    'denial-of-service': 'Detection of a Denial of Service Attack',
+                    'non-standard-protocol': 'Detection of a non-standard protocol or event',
+                    'web-application-activity': 'access to a potentially vulnerable web application',
+                    'misc-attack': 'Misc Attack',
+                    'default-login-attempt': 'Attempt to login by a default username and password',
+                    'external-ip-check': 'Device Retrieving External IP Address Detected',
+                    'pup-activity': 'Possibly Unwanted Program Detected',
+                    'social-engineering': 'Possible Social Engineering Attempted',
+                    'coin-mining': 'Crypto Currency Mining Activity Detected'
+    }
+
+    s_low_risk_classtype = {
+                    'not-suspicious': 'Not Suspicious Traffic',
+                    'unknown': 'Unknown Traffic',
+                    'string-detect': 'A suspicious string was detected',
+                    'network-scan': 'Detection of a Network Scan',
+                    'protocol-command-decode': 'Generic Protocol Command Decode',
+                    'misc-activity': 'Misc activity',
+                    'icmp-event': 'Generic ICMP event'
+    }
+
+    s_info_risk_classtype = {
+                    'tcp-connection': 'A TCP connection was detected'
+    }
+
     rulenum = len(rules)
 
     if debug == 'True':
@@ -175,27 +227,38 @@ def output_risk_tsv(rules, debug='False'):
         content_count = output_count_of_subkey(rule['options'], 'content')
         reference, reference_indices = output_value_of_subkey(rule['options'], 'reference')
 
-        score = 20
-        if rule['sid'] in s_low_risk_sids:
-            score = 20
+        score = 0
+        if rule['sid'] in s_labelled_sids:
+            score = s_labelled_sids[rule['sid']]
         else:
-            if 'classtype' in rule and rule['classtype'] in s_low_risk_classtype:
+            if 'classtype' in rule and rule['classtype'] in s_info_risk_classtype:
+                score = 10
+            elif 'classtype' in rule and rule['classtype'] in s_low_risk_classtype:
                 score = 20
+            elif 'classtype' in rule and rule['classtype'] in s_mid_risk_classtype:
+                score = 30
             elif 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
                 score = 40
-                for i in signature_severity_indices:
-                    if 'Critical' in rule['metadata'][i]:
-                        score += 40
-                    elif 'Major' in rule['metadata'][i]:
-                        score += 20
-                for i in malware_family_indices:
-                    score += 1
-                for i in reference_indices:
-                    score += 1
-                if score >= 100:
-                    score = 99
             else:
-                score = 20
+                score = 15
+
+            for i in signature_severity_indices:
+                if 'Critical' in rule['metadata'][i]:
+                    score += 40
+                elif 'Major' in rule['metadata'][i]:
+                    score += 20
+
+            for i in malware_family_indices:
+                score += 1
+
+            score += content_count
+
+            for i in reference_indices:
+                score += 1
+
+            if score > 100:
+                score = 100
+
         if debug == 'True':
             lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule else 'n/a') +
                         '\t' + rule['classtype'] +
