@@ -149,14 +149,20 @@ def output_risk_tsv(rules, debug='False'):
     #               signature_severity Major ,但 classtype:misc-activity 是misc-activity 應該就是20
     #               但若是trojan-activity 是40分, 但有malware_family 你就可以加分,且malware_family ,若有reference應該可信度又更高
     #               基本former_category USER_AGEAGT 去判斷很容易務斷,雖然很多bot 會用自己的，但行為不一定都是有問題
+    # 2021-02-23    content 愈多 比較這個rule 比較不會FP
+    
+    
     s_labelled_sids = {    
                     2024897: 20, # 
                     2102496: 60, # 2021-02-23    20分裡,有些有CVE 且有MS的patch的, 分數應該要60比較好, reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
                     2102491: 60, #               reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
                     2102385: 60, #               reference:cve,2003-0818;
-                    2027189: 40  #               這個20分就不太合理說
-
+                    2027189: 40, #               這個20分就不太合理說
+                    2025728: 60, # 2021-02-24    70分以上,但IOS可以放在例外，ET MOBILE_MALWARE iOS/Bahamut DNS Lookup 2
+                    2024672: 80, #               ET EXPLOIT Apache Struts 2 REST Plugin (B64) 5 比 MOBILE_MALWARE 嚴重
     }
+    
+    # s_labelled_sids = {}
 
     s_high_risk_classtype = {
                     'attempted-user': 'Attempted User Privilege Gain',
@@ -216,7 +222,7 @@ def output_risk_tsv(rules, debug='False'):
     rulenum = len(rules)
 
     if debug == 'True':
-        lines.append('sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference\n')
+        lines.append('sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference counts\treference\n')
     else:
         lines.append('sid\tscore\tmsg\n')
     # extract values into extracted_vals and extracted_vals_set
@@ -225,6 +231,7 @@ def output_risk_tsv(rules, debug='False'):
         malware_family, malware_family_indices = output_value_of_subkey(rule['metadata'], 'malware_family')
         former_category, former_category_indices = output_value_of_subkey(rule['metadata'], 'former_category')
         content_count = output_count_of_subkey(rule['options'], 'content')
+        reference_count = output_count_of_subkey(rule['options'], 'reference')
         reference, reference_indices = output_value_of_subkey(rule['options'], 'reference')
 
         score = 0
@@ -232,29 +239,43 @@ def output_risk_tsv(rules, debug='False'):
             score = s_labelled_sids[rule['sid']]
         else:
             if 'classtype' in rule and rule['classtype'] in s_info_risk_classtype:
-                score = 10
+                score = 5
             elif 'classtype' in rule and rule['classtype'] in s_low_risk_classtype:
-                score = 20
-            elif 'classtype' in rule and rule['classtype'] in s_mid_risk_classtype:
-                score = 30
-            elif 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
-                score = 40
-            else:
                 score = 15
+            elif 'classtype' in rule and rule['classtype'] in s_mid_risk_classtype:
+                score = 25
+            elif 'classtype' in rule and rule['classtype'] in s_high_risk_classtype:
+                score = 35
+            else:
+                score = 20
 
             for i in signature_severity_indices:
                 if 'Critical' in rule['metadata'][i]:
                     score += 40
                 elif 'Major' in rule['metadata'][i]:
                     score += 20
+                elif 'Minor' in rule['metadata'][i]:
+                    score += 5
 
             for i in malware_family_indices:
-                score += 1
-
-            score += content_count
+                score += 3
 
             for i in reference_indices:
-                score += 1
+                if '.mspx' in rule['options'][i]:
+                    score += 25
+                elif 'cve' in rule['options'][i]:
+                    score += 10
+                else:
+                    score += 1
+
+            score += int(content_count/2)
+
+            if ' iOS' in rule['msg']:
+                score -= 10
+            elif 'Android' in rule['msg']:
+                score -= 10
+            else:
+                pass
 
             if score > 100:
                 score = 100
@@ -266,6 +287,7 @@ def output_risk_tsv(rules, debug='False'):
                         '\t' + malware_family + 
                         '\t' + former_category +
                         '\t' + str(content_count) + 
+                        '\t' + str(reference_count) + 
                         '\t' + reference +
                         '\n')
         else:
