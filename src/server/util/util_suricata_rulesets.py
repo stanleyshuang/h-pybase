@@ -137,6 +137,34 @@ def output_count_of_subkey(rule_data, subkey):
     indices = [i for i, value in enumerate(rule_data) if subkey in value]
     return len(indices)
 
+# parse sample: 'reference:cve,2001-1021;'
+#               'reference:cve,CVE-2010-3973;'
+#               'reference:cve,CVE_2012-5958;'
+#               'reference:cve,2018???16130;'
+def cve_score(value):
+    if value.find('reference:cve,') == -1:
+        return 0
+    start = value.find('cve,') + len('cve,')
+    if value.startswith('CVE-', start):
+        start = value.find('-') + len('-')
+    elif value.startswith('CVE_', start):
+        start = value.find('_') + len('_')
+    elif value.startswith('CAN-', start):
+        start = value.find('-') + len('-')
+    elif value.startswith('cve-', start):
+        start = value.find('-') + len('-')
+    end = value.find('-', start)
+    substring = value[start:end]
+
+    if not substring.isnumeric() and type(substring) is not int:
+        print('cve could not be parsed: ' + substring)
+        return 1
+    if int(substring) > 2010:
+        return int(substring) - 2010
+    else:
+        return 1
+
+
 def output_risk_tsv(rules, debug='False'):
     from datetime import datetime
     now = datetime.now()
@@ -151,7 +179,7 @@ def output_risk_tsv(rules, debug='False'):
     #               基本former_category USER_AGEAGT 去判斷很容易務斷,雖然很多bot 會用自己的，但行為不一定都是有問題
     # 2021-02-23    content 愈多 比較這個rule 比較不會FP
     
-    
+    '''
     s_labelled_sids = {    
                     2024897: 20, # 
                     2102496: 60, # 2021-02-23    20分裡,有些有CVE 且有MS的patch的, 分數應該要60比較好, reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
@@ -168,8 +196,8 @@ def output_risk_tsv(rules, debug='False'):
                     2012153: 76, #
                     2101972: 50, #               reference:cve,2000-1035; 太舊了
     }
-    
-    # s_labelled_sids = {}
+    '''
+    s_labelled_sids = {}
 
     s_high_risk_classtype = {
                     'attempted-user': 'Attempted User Privilege Gain',
@@ -283,7 +311,7 @@ def output_risk_tsv(rules, debug='False'):
                     score += 10
                     b_mspx = True
                 elif not b_cve and 'cve' in rule['options'][i]:
-                    score += 5
+                    score += cve_score(rule['options'][i])
                     b_cve = True
                 else:
                     pass
