@@ -240,6 +240,7 @@ def output_risk_tsv(rules, debug='False'):
         if rule['sid'] in s_labelled_sids:
             score = s_labelled_sids[rule['sid']]
         else:
+            # classtype
             if 'classtype' in rule and rule['classtype'] in s_info_risk_classtype:
                 score = 5
             elif 'classtype' in rule and rule['classtype'] in s_low_risk_classtype:
@@ -251,6 +252,7 @@ def output_risk_tsv(rules, debug='False'):
             else:
                 score = 20
 
+            # signature_severity
             for i in signature_severity_indices:
                 if 'Critical' in rule['metadata'][i]:
                     score += 40
@@ -259,8 +261,15 @@ def output_risk_tsv(rules, debug='False'):
                 elif 'Minor' in rule['metadata'][i]:
                     score += 5
 
+            # malware_family
             for i in malware_family_indices:
                 score += 3
+
+            # reference
+            if len(reference_indices) < 10:
+                score += len(reference_indices)
+            else:
+                score += 10
 
             for i in reference_indices:
                 if '.mspx' in rule['options'][i]:
@@ -268,10 +277,15 @@ def output_risk_tsv(rules, debug='False'):
                 elif 'cve' in rule['options'][i]:
                     score += 10
                 else:
-                    score += 1
+                    pass
 
-            score += int(content_count/2)
+            # content
+            if content_count > 10:
+                score += 5
+            else:
+                score += int(content_count/2)
 
+            # msg
             if ' iOS' in rule['msg']:
                 score -= 10
             elif 'Android' in rule['msg']:
@@ -279,8 +293,12 @@ def output_risk_tsv(rules, debug='False'):
             else:
                 pass
 
+            # score
             if score > 100:
                 score = 100
+
+            if score < 0:
+                score = 0
 
         if debug == 'True':
             lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule else 'n/a') +
