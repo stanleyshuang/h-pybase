@@ -159,8 +159,11 @@ def cve_score(value):
         else:
             return 1
     else:
-        print('cve could not be parsed: ' + substring)
-        return 1
+        if substring == '2018???16130':
+            return 8
+        else:
+            print('cve could not be parsed: ' + substring)
+            return 1
 
 
 def output_risk_tsv(rules, debug='False'):
