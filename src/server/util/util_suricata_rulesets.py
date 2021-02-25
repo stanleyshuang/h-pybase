@@ -322,9 +322,9 @@ def output_risk_tsv(rules, debug='False'):
 
             # msg
             if ' iOS' in rule['msg']:
-                score -= 10
+                score -= 15
             elif 'Android' in rule['msg']:
-                score -= 10
+                score -= 15
             elif 'MS08-067' in rule['msg']:
                 score += 30
             else:
