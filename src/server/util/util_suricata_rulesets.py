@@ -162,6 +162,11 @@ def output_risk_tsv(rules, debug='False'):
                     2024672: 80, #               ET EXPLOIT Apache Struts 2 REST Plugin (B64) 5 比 MOBILE_MALWARE 嚴重
                     2101919: 80, # 2021-02-25    GPL FTP CWD overflow attempt: cve 2004 以前
                     2101734: 80, #               GPL FTP USER overflow attempt: cve 2004 以前
+                    2008690: 85, #               ET NETBIOS Microsoft Windows NETAPI Stack Overflow Inbound - MS08-067 (1)，MS08-067 是很有名的漏洞
+                    2009610: 70, #               
+                    2012143: 75, #
+                    2012153: 76, #
+                    2101972: 50, #               reference:cve,2000-1035; 太舊了
     }
     
     # s_labelled_sids = {}
@@ -263,7 +268,7 @@ def output_risk_tsv(rules, debug='False'):
 
             # malware_family
             for i in malware_family_indices:
-                score += 3
+                score += 5
 
             # reference
             if len(reference_indices) < 10:
@@ -271,11 +276,15 @@ def output_risk_tsv(rules, debug='False'):
             else:
                 score += 10
 
+            b_mspx = False
+            b_cve = False
             for i in reference_indices:
-                if '.mspx' in rule['options'][i]:
-                    score += 25
-                elif 'cve' in rule['options'][i]:
+                if not b_mspx and '.mspx' in rule['options'][i]:
                     score += 10
+                    b_mspx = True
+                elif not b_cve and 'cve' in rule['options'][i]:
+                    score += 5
+                    b_cve = True
                 else:
                     pass
 
@@ -290,6 +299,8 @@ def output_risk_tsv(rules, debug='False'):
                 score -= 10
             elif 'Android' in rule['msg']:
                 score -= 10
+            elif 'MS08-067' in rule['msg']:
+                score += 30
             else:
                 pass
 
