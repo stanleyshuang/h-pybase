@@ -145,23 +145,21 @@ def cve_score(value):
     if value.find('reference:cve,') == -1:
         return 0
     start = value.find('cve,') + len('cve,')
-    if value.startswith('CVE-', start):
+    if value.lower().startswith(('cve-', 'can-'), start):
         start = value.find('-') + len('-')
-    elif value.startswith('CVE_', start):
+    elif value.lower().startswith(('cve_', 'can_'), start):
         start = value.find('_') + len('_')
-    elif value.startswith('CAN-', start):
-        start = value.find('-') + len('-')
-    elif value.startswith('cve-', start):
-        start = value.find('-') + len('-')
     end = value.find('-', start)
     substring = value[start:end]
 
-    if not substring.isnumeric() and type(substring) is not int:
-        print('cve could not be parsed: ' + substring)
-        return 1
-    if int(substring) > 2010:
-        return int(substring) - 2010
+    if type(substring) is int or substring.isnumeric():
+        year = int(substring)
+        if year > 2010:
+            return year - 2010
+        else:
+            return 1
     else:
+        print('cve could not be parsed: ' + substring)
         return 1
 
 
