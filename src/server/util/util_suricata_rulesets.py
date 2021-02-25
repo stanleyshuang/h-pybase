@@ -166,7 +166,7 @@ def cve_score(value):
             return 1
 
 
-def output_risk_tsv(rules, debug='False'):
+def output_risk_tsv(rules, mode='released'):
     from datetime import datetime
     now = datetime.now()
     dt_string = now.strftime("%Y%m%d-%H%M%S")
@@ -180,8 +180,8 @@ def output_risk_tsv(rules, debug='False'):
     #               基本former_category USER_AGEAGT 去判斷很容易務斷,雖然很多bot 會用自己的，但行為不一定都是有問題
     # 2021-02-23    content 愈多 比較這個rule 比較不會FP
     
-    '''
-    s_labelled_sids = {    
+    if mode == 'labelled':
+        s_labelled_sids = {    
                     2024897: 20, # 
                     2102496: 60, # 2021-02-23    20分裡,有些有CVE 且有MS的patch的, 分數應該要60比較好, reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
                     2102491: 60, #               reference:cve,2003-0813;, reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx;
@@ -196,9 +196,9 @@ def output_risk_tsv(rules, debug='False'):
                     2012143: 75, #
                     2012153: 76, #
                     2101972: 50, #               reference:cve,2000-1035; 太舊了
-    }
-    '''
-    s_labelled_sids = {}
+        }
+    else:
+        s_labelled_sids = {}
 
     s_high_risk_classtype = {
                     'attempted-user': 'Attempted User Privilege Gain',
@@ -257,7 +257,7 @@ def output_risk_tsv(rules, debug='False'):
 
     rulenum = len(rules)
 
-    if debug == 'True':
+    if mode == 'verbose' or mode == 'labelled':
         lines.append('sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference counts\treference\n')
     else:
         lines.append('sid\tscore\tmsg\n')
@@ -340,7 +340,7 @@ def output_risk_tsv(rules, debug='False'):
             if score < 0:
                 score = 0
 
-        if debug == 'True':
+        if mode == 'verbose' or mode == 'labelled':
             lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule else 'n/a') +
                         '\t' + rule['classtype'] +
                         '\t' + signature_severity +

@@ -47,8 +47,8 @@ def suricata_rulesets_analyze_value():
     return show_rules_value_analysis(rules)
 
 # suricata ruleset parser
-@area51.route('/suricata-rulesets-tsv/<string:debug>', methods=['GET'])
-def suricata_rulesets_tsv(debug='False'):
+@area51.route('/suricata-rulesets-tsv/<string:mode>', methods=['GET'])
+def suricata_rulesets_tsv(mode='released'):
     ### get file list
     rule_files = get_name_list_of_files(s_ruleset_path)
     ### read file in all_lines
@@ -56,8 +56,10 @@ def suricata_rulesets_tsv(debug='False'):
     for rule_file in rule_files:
         all_lines = get_lines(s_ruleset_path + rule_file)
         rules.extend(parse_ruleset(all_lines))
-    tsv_lines = output_risk_tsv(rules, debug)
-    if debug == 'True':
+    tsv_lines = output_risk_tsv(rules, mode)
+    if mode == 'verbose':
+        file_name = s_output_data_path + 'suricata_rulesets_analysis.tsv'
+    elif mode == 'labelled':
         file_name = s_output_data_path + 'suricata_rulesets_analysis.tsv'
     else:
         file_name = s_output_data_path + 'suricata_rulesets_risk.tsv'
