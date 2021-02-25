@@ -160,6 +160,8 @@ def output_risk_tsv(rules, debug='False'):
                     2027189: 40, #               這個20分就不太合理說
                     2025728: 60, # 2021-02-24    70分以上,但IOS可以放在例外，ET MOBILE_MALWARE iOS/Bahamut DNS Lookup 2
                     2024672: 80, #               ET EXPLOIT Apache Struts 2 REST Plugin (B64) 5 比 MOBILE_MALWARE 嚴重
+                    2101919: 80, # 2021-02-25    GPL FTP CWD overflow attempt: cve 2004 以前
+                    2101734: 80, #               GPL FTP USER overflow attempt: cve 2004 以前
     }
     
     # s_labelled_sids = {}
