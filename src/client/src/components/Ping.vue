@@ -5,8 +5,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   name: 'Ping',
   data() {
@@ -16,15 +14,7 @@ export default {
   },
   methods: {
     getMessage() {
-      const path = 'http://localhost:8000/area51/ping';
-      axios.get(path)
-        .then((res) => {
-          this.msg = res.data;
-        })
-        .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-        });
+      this.msg = "Hello World!!";
     },
   },
   created() {
