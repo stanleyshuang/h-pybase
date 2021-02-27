@@ -25,7 +25,7 @@ def after_request(response):
 # sanity check route
 @area51.route('/ping', methods=['GET'])
 def ping_pong():
-    return jsonify('pong!')
+    return jsonify('PONG!!')
 
 # suricata ruleset parser
 @area51.route('/suricata-ruleset-analyze-value/<string:rule_file>', methods=['GET'])
