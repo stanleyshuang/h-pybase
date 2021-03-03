@@ -340,16 +340,6 @@ def output_risk_tsv(rules, mode='released'):
             if score < 0:
                 score = 0
 
-        print('--->')
-        print(rule['msg'])
-        print(rule['classtype'] if 'classtype' in rule and rule['classtype'] else 'n/a')
-        print(signature_severity)
-        print(malware_family)
-        print(former_category) 
-        print(str(content_count)) 
-        print(str(reference_count)) 
-        print(reference)
-
         if mode == 'verbose' or mode == 'labelled':
             lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule else 'n/a') +
                         '\t' + rule['classtype'] if 'classtype' in rule and rule['classtype'] else 'n/a' +
