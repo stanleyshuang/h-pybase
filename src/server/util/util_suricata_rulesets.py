@@ -132,8 +132,7 @@ def output_value_of_subkey(rule_data, subkey):
     else:
         output_value = 'n/a'
     if len(output_value) == 0:
-        output_value = '--'
-    print(output_value)
+        output_value = '-'
     return output_value, indices
 
 def output_count_of_subkey(rule_data, subkey):
