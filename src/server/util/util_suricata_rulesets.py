@@ -131,6 +131,9 @@ def output_value_of_subkey(rule_data, subkey):
             output_value += rule_data[idx] 
     else:
         output_value = 'n/a'
+    if len(output_value) == 0:
+        output_value = '--'
+    print(output_value)
     return output_value, indices
 
 def output_count_of_subkey(rule_data, subkey):
@@ -341,8 +344,8 @@ def output_risk_tsv(rules, mode='released'):
                 score = 0
 
         if mode == 'verbose' or mode == 'labelled':
-            lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule else 'n/a') +
-                        '\t' + rule['classtype'] if 'classtype' in rule and rule['classtype'] else 'n/a' +
+            lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if 'msg' in rule and rule['msg'] else 'n/a') +
+                        '\t' + (rule['classtype'] if 'classtype' in rule and rule['classtype'] else 'n/a') +
                         '\t' + signature_severity +
                         '\t' + malware_family + 
                         '\t' + former_category +

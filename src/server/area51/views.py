@@ -54,7 +54,7 @@ def suricata_rulesets_tsv(mode='released'):
     ### read file in all_lines
     rules = []
     for rule_file in rule_files:
-        all_lines = get_lines(s_ruleset_path + rule_file)
+        all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
         rules.extend(parse_ruleset(all_lines))
     tsv_lines = output_risk_tsv(rules, mode)
     if mode == 'verbose':

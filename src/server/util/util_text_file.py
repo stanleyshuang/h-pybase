@@ -6,8 +6,8 @@
 # Date:     2020-12-04
 # 
 
-def get_lines(filename):
-    with open(filename, 'r') as fp:
+def get_lines(filename, encoding='utf-8'):
+    with open(filename, 'r', encoding=encoding) as fp:
         all_lines = fp.readlines()
         return all_lines
     return None
