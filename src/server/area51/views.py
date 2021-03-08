@@ -30,7 +30,7 @@ def ping_pong():
 # suricata ruleset parser
 @area51.route('/suricata-ruleset-analyze-value/<string:rule_file>', methods=['GET'])
 def suricata_ruleset_analyze_value(rule_file):
-    all_lines = get_lines(s_ruleset_path + rule_file)
+    all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
     rules = parse_ruleset(all_lines)
     return show_rules_value_analysis(rules)
 
@@ -42,7 +42,7 @@ def suricata_rulesets_analyze_value():
     ### read file in all_lines
     rules = []
     for rule_file in rule_files:
-        all_lines = get_lines(s_ruleset_path + rule_file)
+        all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
         rules.extend(parse_ruleset(all_lines))
     return show_rules_value_analysis(rules)
 
@@ -84,3 +84,41 @@ def suricata_ruleset_rule_review(sid):
                 output += line + '<br>\n'
                 write_lines(s_output_data_path + 'etopen_sid_{sid}.txt'.format(sid=str(sid)), line)
     return output
+
+# test
+@area51.route('/suricata-rulesets-sid-match', methods=['GET'])
+def suricata_rulesets_sid_match():
+    ### get file list
+    rule_files = get_name_list_of_files(s_ruleset_path)
+    ### read file in all_lines
+    rules = []
+    sids = []
+    comment_count = 0
+    for rule_file in rule_files:
+        all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
+        rules.extend(parse_ruleset(all_lines))
+
+        for line in all_lines:
+            if line[0] == '#':
+                comment_count += 1
+                continue
+            if line.find('sid:') == -1:
+                continue
+            start = line.find('sid:') + len('sid:')
+            end = line.find(';', start)
+            substring = line[start:end]
+            sids.append(substring)
+    parsed_sids = []
+    for rule in rules:
+        parsed_sids.append(str(rule['sid']))
+
+    output = ""
+    count = 0
+    for sid in sids:
+        if sid not in parsed_sids:
+            count += 1
+            output += 'sid:{sid}<br>\n'.format(sid=sid)
+
+    count_result = '{count} sid not in parsed rules<br>\b'.format(count=str(count))
+    comment_result = '{comment_count} lines are commented<br>\b'.format(comment_count=str(comment_count))
+    return count_result + comment_result + output
