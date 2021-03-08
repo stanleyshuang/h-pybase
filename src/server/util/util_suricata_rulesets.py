@@ -355,3 +355,30 @@ def output_risk_tsv(rules, mode='released'):
         else:
             lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
     return lines
+
+def test_match_sid(all_lines):
+    rules = parse_ruleset(all_lines)
+    parsed_sids = []
+    for rule in rules:
+        parsed_sids.append(str(rule['sid']))
+
+    sids = []
+    comment_count = 0
+    for line in all_lines:
+        if line[0] == '#':
+            comment_count += 1
+            continue
+        if line.find('sid:') == -1:
+            continue
+        start = line.find('sid:') + len('sid:')
+        end = line.find(';', start)
+        substring = line[start:end]
+        sids.append(substring)
+
+    not_matched_sids = []
+    not_matched_count = 0
+    for sid in sids:
+        if sid not in parsed_sids:
+            not_matched_count += 1
+            not_matched_sids.append(sid)
+    return len(not_matched_sids) == 0, not_matched_count, comment_count, not_matched_sids
