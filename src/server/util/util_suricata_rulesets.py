@@ -445,7 +445,7 @@ def output_risk_tsv(rules, mode='released'):
                         '\n')
         else:
             lines.append(str(rule['sid']) + '\t' + str(score) + 
-                        '\t' + (str(s_event_type_map[rule['classtype']]) if 'classtype' in rule and rule['classtype'] and rule['classtype'] in s_event_type_map else '900000000') +
+                        '\t' + (str(s_event_type_map[rule['classtype']]) if 'classtype' in rule and rule['classtype'] and rule['classtype'] in s_event_type_map else str(EVE_DTA_UNKNOWN)) +
                         '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
     return lines
 
