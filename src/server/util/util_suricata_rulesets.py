@@ -7,6 +7,51 @@
 from suricataparser import parse_rule, parse_file
 
 
+EVE_DTA_ATTEMPTED_ADMIN         = 900001000
+EVE_DTA_ATTEMPTED_DOS           = 900001001
+EVE_DTA_ATTEMPTED_RECON         = 900001002
+EVE_DTA_ATTEMPTED_USER          = 900001003
+EVE_DTA_BAD_UNKNOWN             = 900001004
+EVE_DTA_COIN_MINING             = 900001005
+EVE_DTA_COMMAND_AND_CONTROL     = 900001006
+EVE_DTA_CREDENTIAL_THEFT        = 900001007
+EVE_DTA_DEFAULT_LOGIN_ATTEMPT   = 900001008
+EVE_DTA_DENIAL_OF_SERVICE       = 900001009
+EVE_DTA_DOMAIN_C2               = 900001010
+EVE_DTA_EXPLOIT_KIT             = 900001011
+EVE_DTA_EXTERNAL_IP_CHECK       = 900001012
+EVE_DTA_ICMP_EVENT              = 900001013
+EVE_DTA_KICKASS_PORN            = 900001014
+EVE_DTA_MISC_ACTIVITY           = 900001015
+EVE_DTA_MISC_ATTACK             = 900001016
+EVE_DTA_NETWORK_SCAN            = 900001017
+EVE_DTA_NON_STANDARD_PROTOCOL   = 900001018
+EVE_DTA_NOT_SUSPICIOUS          = 900001019
+EVE_DTA_POLICY_VIOLATION        = 900001020
+EVE_DTA_PROTOCOL_COMMAND_DECODE = 900001021
+EVE_DTA_PUP_ACTIVITY            = 900001022
+EVE_DTA_RPC_PORTMAP_DECODE      = 900001023
+EVE_DTA_SHELLCODE_DETECT        = 900001024
+EVE_DTA_SOCIAL_ENGINEERING      = 900001025
+EVE_DTA_STRING_DETECT           = 900001026
+EVE_DTA_SUCCESSFUL_ADMIN        = 900001027
+EVE_DTA_SUCCESSFUL_DOS          = 900001028
+EVE_DTA_SUCCESSFUL_RECON_LARGESCALE = 900001029
+EVE_DTA_SUCCESSFUL_RECON_LIMITED    = 900001030
+EVE_DTA_SUCCESSFUL_USER         = 900001031
+EVE_DTA_SUSPICIOUS_FILENAME_DETECT  = 900001032
+EVE_DTA_SUSPICIOUS_LOGIN        = 900001033
+EVE_DTA_SYSTEM_CALL_DETECT      = 900001034
+EVE_DTA_TARGETED_ACTIVITY       = 900001035
+EVE_DTA_TCP_CONNECTION          = 900001036
+EVE_DTA_TROJAN_ACTIVITY         = 900001037
+EVE_DTA_UNKNOWN                 = 900001038
+EVE_DTA_UNSUCCESSFUL_USER       = 900001039
+EVE_DTA_UNUSUAL_CLIENT_PORT_CONNECTION  = 900001040
+EVE_DTA_WEB_APPLICATION_ACTIVITY        = 900001041
+EVE_DTA_WEB_APPLICATION_ATTACK          = 900001042
+
+
 def find_str_in_list(the_str, the_list):
     for subs in the_list:
         if subs in the_str:
@@ -257,12 +302,58 @@ def output_risk_tsv(rules, mode='released'):
                     'tcp-connection': 'A TCP connection was detected'
     }
 
+    s_event_type_map = {
+                    "attempted-admin":      EVE_DTA_ATTEMPTED_ADMIN,
+                    "attempted-dos":        EVE_DTA_ATTEMPTED_DOS,
+                    "attempted-recon":      EVE_DTA_ATTEMPTED_RECON,
+                    "attempted-user":       EVE_DTA_ATTEMPTED_USER,
+                    "bad-unknown":          EVE_DTA_BAD_UNKNOWN,
+                    "coin-mining":          EVE_DTA_COIN_MINING,
+                    "command-and-control":  EVE_DTA_COMMAND_AND_CONTROL,
+                    "credential-theft":     EVE_DTA_CREDENTIAL_THEFT,
+                    "default-login-attempt":    EVE_DTA_DEFAULT_LOGIN_ATTEMPT,
+                    "denial-of-service":    EVE_DTA_DENIAL_OF_SERVICE,
+                    "domain-c2":            EVE_DTA_DOMAIN_C2,
+                    "exploit-kit":          EVE_DTA_EXPLOIT_KIT,
+                    "external-ip-check":    EVE_DTA_EXTERNAL_IP_CHECK,
+                    "icmp-event":           EVE_DTA_ICMP_EVENT,
+                    "kickass-porn":         EVE_DTA_KICKASS_PORN,
+                    "misc-activity":        EVE_DTA_MISC_ACTIVITY,
+                    "misc-attack":          EVE_DTA_MISC_ATTACK,
+                    "network-scan":         EVE_DTA_NETWORK_SCAN,
+                    "non-standard-protocol":    EVE_DTA_NON_STANDARD_PROTOCOL,
+                    "not-suspicious":       EVE_DTA_NOT_SUSPICIOUS,
+                    "policy-violation":     EVE_DTA_POLICY_VIOLATION,
+                    "protocol-command-decode":  EVE_DTA_PROTOCOL_COMMAND_DECODE,
+                    "pup-activity":         EVE_DTA_PUP_ACTIVITY,
+                    "rpc-portmap-decode":   EVE_DTA_RPC_PORTMAP_DECODE,
+                    "shellcode-detect":     EVE_DTA_SHELLCODE_DETECT,
+                    "social-engineering":   EVE_DTA_SOCIAL_ENGINEERING,
+                    "string-detect":        EVE_DTA_STRING_DETECT,
+                    "successful-admin":     EVE_DTA_SUCCESSFUL_ADMIN,
+                    "successful-dos":       EVE_DTA_SUCCESSFUL_DOS,
+                    "successful-recon-largescale":  EVE_DTA_SUCCESSFUL_RECON_LARGESCALE,
+                    "successful-recon-limited":     EVE_DTA_SUCCESSFUL_RECON_LIMITED,
+                    "successful-user":      EVE_DTA_SUCCESSFUL_USER,
+                    "suspicious-filename-detect":   EVE_DTA_SUSPICIOUS_FILENAME_DETECT,
+                    "suspicious-login":     EVE_DTA_SUSPICIOUS_LOGIN,
+                    "system-call-detect":   EVE_DTA_SYSTEM_CALL_DETECT,
+                    "targeted-activity":    EVE_DTA_TARGETED_ACTIVITY,
+                    "tcp-connection":       EVE_DTA_TCP_CONNECTION,
+                    "trojan-activity":      EVE_DTA_TROJAN_ACTIVITY,
+                    "unknown":              EVE_DTA_UNKNOWN,
+                    "unsuccessful-user":    EVE_DTA_UNSUCCESSFUL_USER,
+                    "unusual-client-port-connection":   EVE_DTA_UNUSUAL_CLIENT_PORT_CONNECTION,
+                    "web-application-activity":         EVE_DTA_WEB_APPLICATION_ACTIVITY,
+                    "web-application-attack":           EVE_DTA_WEB_APPLICATION_ATTACK
+    }
+
     rulenum = len(rules)
 
     if mode == 'verbose' or mode == 'labelled':
         lines.append('sid\tscore\tmsg\tclasstype\tsignature_severity\tmalware_family\tformer_category\tcontent counts\treference counts\treference\n')
     else:
-        lines.append('sid\tscore\tmsg\n')
+        lines.append('sid\tscore\tevent_id\tmsg\n')
     # extract values into extracted_vals and extracted_vals_set
     for rule in rules:
         signature_severity, signature_severity_indices = output_value_of_subkey(rule['metadata'], 'signature_severity')
@@ -353,7 +444,9 @@ def output_risk_tsv(rules, mode='released'):
                         '\t' + reference +
                         '\n')
         else:
-            lines.append(str(rule['sid']) + '\t' + str(score) + '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
+            lines.append(str(rule['sid']) + '\t' + str(score) + 
+                        '\t' + (str(s_event_type_map[rule['classtype']]) if 'classtype' in rule and rule['classtype'] and rule['classtype'] in s_event_type_map else '900000000') +
+                        '\t' + (rule['msg'] if rule['msg'] else 'n/a') + '\n')
     return lines
 
 def test_match_sid(all_lines):
