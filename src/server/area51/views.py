@@ -13,6 +13,7 @@ from server.util.util_file import get_name_list_of_files
 from server.util.util_suricata_rulesets import parse_a_rule, parse_ruleset, show_rules_value_analysis, output_risk_tsv, test_match_sid
 from server.util.util_text_file import get_lines, write_lines
 
+s_encoding = 'utf-8' # 'windows-1252'
 s_static_data_path = './static/'
 s_output_data_path = './downloads/'
 s_ruleset_path = s_static_data_path + 'rules/'
@@ -30,7 +31,7 @@ def ping_pong():
 # suricata ruleset parser
 @area51.route('/suricata-ruleset-analyze-value/<string:rule_file>', methods=['GET'])
 def suricata_ruleset_analyze_value(rule_file):
-    all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
+    all_lines = get_lines(s_ruleset_path + rule_file, s_encoding)
     rules = parse_ruleset(all_lines)
     return show_rules_value_analysis(rules)
 
@@ -42,7 +43,7 @@ def suricata_rulesets_analyze_value():
     ### read file in all_lines
     rules = []
     for rule_file in rule_files:
-        all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
+        all_lines = get_lines(s_ruleset_path + rule_file, s_encoding)
         rules.extend(parse_ruleset(all_lines))
     return show_rules_value_analysis(rules)
 
@@ -54,7 +55,7 @@ def suricata_rulesets_tsv(mode='released'):
     ### read file in all_lines
     rules = []
     for rule_file in rule_files:
-        all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
+        all_lines = get_lines(s_ruleset_path + rule_file, s_encoding)
         rules.extend(parse_ruleset(all_lines))
     tsv_lines = output_risk_tsv(rules, mode)
     if mode == 'verbose':
@@ -93,7 +94,7 @@ def suricata_rulesets_sid_match():
     ### read file in all_lines
     output = ""
     for rule_file in rule_files:
-        all_lines = get_lines(s_ruleset_path + rule_file, 'windows-1252')
+        all_lines = get_lines(s_ruleset_path + rule_file, s_encoding)
         b_matched, not_matched_counts, comment_count, sids = test_match_sid(all_lines)
         if not b_matched:
             count_result = '{count} sid not in parsed rules. '.format(count=str(count))
