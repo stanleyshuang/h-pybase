@@ -103,3 +103,38 @@ def suricata_rulesets_sid_match():
         else:
             output += '[' + rule_file + '] - pass<br>\n'
     return output
+
+# find high score pcap
+@area51.route('/suricata-pick-high-score-pcap', methods=['GET'])
+def suricata_pick_high_score_pcap():
+    output = ""
+    ### get sid score
+    sid2score = {}
+    all_lines = get_lines(s_output_data_path + 'suricata_rulesets_risk.tsv', s_encoding)
+    for line in all_lines:
+        if line[0] == '#':
+            continue
+        tokens = line.split('\t')
+        if tokens[0] == 'sid':
+            continue
+        sid = tokens[0]
+        score = tokens[1]
+        sid2score[sid] = int(score)
+    # for key in sid2score:
+    #     output += str(key) + ':' + str(score) + '<br>'
+    ### get file list
+    high_score_pcap = set()
+    s_pcap_score_files_path = s_static_data_path + 'match/'
+    pcap_score_files = get_name_list_of_files(s_pcap_score_files_path)
+    ### read file in all_lines
+    for pcap_score_file in pcap_score_files:
+        all_lines = get_lines(s_pcap_score_files_path + pcap_score_file, s_encoding)
+        for line in all_lines:
+            tokens = line.split('|')
+            for i in range(1, len(tokens)):
+                if tokens[i] in sid2score and sid2score[tokens[i]] >= 70:
+                    high_score_pcap.add(tokens[0]+'\n')
+    write_lines(s_output_data_path + 'high_score_pcap.txt', high_score_pcap)
+    for key in high_score_pcap:
+        output += key + '<br>'
+    return output
