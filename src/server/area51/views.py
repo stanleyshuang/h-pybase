@@ -10,13 +10,22 @@ from . import area51
 from flask import jsonify
 
 from server.util.util_file import get_name_list_of_files
-from server.util.util_suricata_rulesets import parse_a_rule, parse_ruleset, show_rules_value_analysis, output_risk_tsv, test_match_sid
+from server.util.util_suricata_rulesets import (
+    parse_a_rule, 
+    parse_ruleset, 
+    show_rules_value_analysis, 
+    output_risk_tsv, 
+    test_match_sid, 
+    rule_filter,
+)
 from server.util.util_text_file import get_lines, write_lines
 
-s_encoding = 'utf-8' # 'windows-1252'
+# s_encoding = 'utf-8'
+s_encoding = 'windows-1252'
 s_static_data_path = './static/'
 s_output_data_path = './downloads/'
-s_ruleset_path = s_static_data_path + 'rules/'
+# s_ruleset_path = s_static_data_path + 'et-pro/'
+s_ruleset_path = s_static_data_path + 'et-open/'
 
 
 @area51.after_app_request
@@ -65,6 +74,10 @@ def suricata_rulesets_tsv(mode='released'):
     else:
         file_name = s_output_data_path + 'suricata_rulesets_risk.tsv'
     write_lines(file_name, tsv_lines)
+    ### output rulesets
+    after_filtering = rule_filter(all_lines, mode)
+    write_lines(s_output_data_path + 'qundr_suricata.rules', after_filtering)
+    ### Web UI
     output = ''
     for line in tsv_lines:
         output += line + '<br>'

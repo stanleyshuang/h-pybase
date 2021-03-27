@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
 # Auther:   Stanley Huang
-# Project:  Duffy ver. 2.0
-# Date:     2017/12/15
+# Project:  QuNDR 1.0
+# Date:     2021/02/03
 # 
 from suricataparser import parse_rule, parse_file
 
@@ -475,3 +475,13 @@ def test_match_sid(all_lines):
             not_matched_count += 1
             not_matched_sids.append(sid)
     return len(not_matched_sids) == 0, not_matched_count, comment_count, not_matched_sids
+
+def rule_filter(all_lines, mode='released'):
+    after_filter = []
+    for line in all_lines:
+        rule = parse_rule(line)
+        if line[0] != '#' and rule.classtype == 'protocol-command-decode':
+            line = '# ' + line
+        after_filter.append(line)
+    return after_filter
+
