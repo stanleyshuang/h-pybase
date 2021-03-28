@@ -5,7 +5,9 @@
 # Date:     2021/02/12
 #
 import json
+import os
 
+from .. import app
 from . import area51
 from flask import jsonify
 

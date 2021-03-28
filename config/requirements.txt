@@ -9,3 +9,5 @@ flask_migrate
 flask_script
 ### application ###
 suricataparser
+### LINE API ###
+line-bot-sdk
