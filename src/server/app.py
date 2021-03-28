@@ -4,8 +4,8 @@
 # Project:  h-pybase ver. 1.0
 # Date:     2021/02/12
 #
+import os
 from flask import Flask, request, abort
-
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -15,8 +15,6 @@ from linebot.exceptions import (
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
-
-import os
 
 from . import app
 
@@ -54,7 +52,6 @@ def callback():
         abort(400)
 
     return 'OK'
-
 
 
 if __name__ == "__main__":
