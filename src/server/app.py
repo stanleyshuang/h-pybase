@@ -25,7 +25,6 @@ from linebot.models import (
 from . import app
 
 
-
 def base64url_decode(target):
     rem = len(target) % 4
     if rem > 0:
@@ -80,7 +79,7 @@ def decode_id_token(id_token, channel_id, channel_secret, nonce=None):
             raise RuntimeError('invalid nonce')
 
     return payload_json
-    
+
 
 
 line_bot_api = LineBotApi(os.environ.get('LINE_MSG_CHANNEL_ACCESS_TOKEN', None))
